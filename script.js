@@ -15,14 +15,13 @@ const validateMonth = (month) => {
 
 const validateYear = (year) => {
   const currentYear = new Date().getFullYear();
-  if (year && year > 0 && year <= currentYear) {
-    return 200_00_000;
+  if (year && year > currentYear - 100 && year <= currentYear) {
     return true;
   }
 };
 
 const isDateValid = (dayElement, monthElement, yearElement) => {
-  let isValid = [false, false, false];
+  const isValid = [false, false, false];
 
   if (!validateDay(dayElement.value)) {
     dayElement.classList.add("card__input--error");
@@ -51,31 +50,53 @@ const isDateValid = (dayElement, monthElement, yearElement) => {
 const calculateAge = (year, month, day) => {
   const today = new Date();
   const birthDate = new Date(year, month - 1, day);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
+  let yearDiff = today.getFullYear() - birthDate.getFullYear();
+  let monthDiff = today.getMonth() - birthDate.getMonth();
+  let dayDiff = today.getDate() - birthDate.getDate();
+  console.log(yearDiff, monthDiff, dayDiff);
 
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
+  if (monthDiff < 0) {
+    yearDiff -= 1;
+    monthDiff += 12;
+  } else if (monthDiff === 0 && dayDiff < 0) {
+    yearDiff -= 1;
+    monthDiff += 11;
+    dayDiff += 30;
   }
-
-  return age;
+  if (dayDiff < 0) {
+    monthDiff -= 1;
+    dayDiff += 30;
+  }
+  return [yearDiff, monthDiff, dayDiff];
 };
 
 const onClickHandler = () => {
   const dayElement = document.querySelector('.card__input[name="day"]');
   const monthElement = document.querySelector('.card__input[name="month"]');
   const yearElement = document.querySelector('.card__input[name="year"]');
-  const resultElement = document.querySelector(".card__resultValue");
+  const resultElements = document.querySelectorAll(".card__resultValue");
 
   if (!isDateValid(dayElement, monthElement, yearElement)) {
-    resultElement.textContent = "--";
+    resultElements.forEach((item) => {
+      item.textContent = "--";
+    });
     return;
   }
+  const ageArray = calculateAge(
+    yearElement.value,
+    monthElement.value,
+    dayElement.value
+  );
+  resultElements[0].textContent = ageArray[0];
+  resultElements[1].textContent = ageArray[1];
+  resultElements[2].textContent = ageArray[2];
 
-  resultElement.textContent = calculateAge(yearElement.value, monthElement.value, dayElement.value).toString();
+  let note = document.getElementById("note");
+  let footer = document.getElementById("footer");
+  note.style.display = "flex";
+  footer.style.margin = "0";
 };
 
-// run the function when the Enter key is clicked
 inputElements.forEach((item) => {
   item.addEventListener("keydown", (e) => {
     e.key === "Enter" && onClickHandler();
